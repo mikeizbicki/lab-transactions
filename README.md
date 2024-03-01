@@ -13,6 +13,9 @@ For this reason, I consider Postgres to be the best choice of database for new p
 
 ## Populating the Databases
 
+Clone this repo onto the lambda server.
+You do not need to fork it.
+
 The file `ledger.sql` contains a SQL schema for a simple [double-entry bookkeeping](https://en.wikipedia.org/wiki/Double-entry_bookkeeping) system.
 It contains 2 tables `accounts` and the `transactions` between those accounts.
 
@@ -117,6 +120,11 @@ mysql> SELECT count(*) FROM transactions;
 
 Notice above that the incantation to connect to mysql is a bit more complicated than the incantation to connect to postgres.
 This is because the default postgres docker images specify 
+
+### Notice!
+
+All three of our databases were created with the exact same SQL commands, and so we should hope that they behave exactly the same way.
+It's time to find out if they do.
 
 ## A "Simple" Query
 
@@ -334,7 +342,7 @@ and if the amount was negative, then the debit/credit ids should be swapped.)
 For each database, run the commands
 ```
 INSERT INTO transactions VALUES (100, 1, 2, 10.0);
-INSERT INTO transactions VALUES (100, 1, 2, -10.0);
+INSERT INTO transactions VALUES (101, 1, 2, -10.0);
 ```
 If the first command succeeds and the second fails, then the database enforces the constraint and you should write "Yes" in the table.
 If both commands succeed, then the database does not enforce the constraint and you should write "No" in the table.
@@ -375,7 +383,7 @@ If both commands succeed, then the database does not enforce the constraint and 
 
 ### REFERENCES
 
-The `debig_account_id` and `credit_account_id` columns in the `transactions` table have a `REFERENCES` constraint:
+The `debit_account_id` and `credit_account_id` columns in the `transactions` table have a `REFERENCES` constraint:
 ```
 CREATE TABLE transactions (
     transaction_id INTEGER PRIMARY KEY,
@@ -384,14 +392,15 @@ CREATE TABLE transactions (
     amount NUMERIC(10,2) CHECK (amount > 0)
 );
 ```
-REFERENCES constraints are more commonly called FOREIGN KEY constraints (although the syntax FOREIGN KEY is not valid SQL).
-These constraints are designed to ensure that every transaction involves an `account_id` that actually exist in the `accounts` table.
-It is common (although not required) that the columns in a FOREIGN KEY constraint refer to a PRIMARY KEY in the foreign table.
+These constraints are designed to ensure that every transaction involves `account_id`s that actually exist in the `accounts` table.
+REFERENCES constraints are more commonly called FOREIGN KEY constraints,
+and there is an alternative (more verbose and complicated) SQL syntax that uses the FOREIGN KEY keywords to create the constraints.
+It is common that the columns in a FOREIGN KEY constraint refer to a PRIMARY KEY in the foreign table.
 
 For each database, run the commands
 ```
 INSERT INTO transactions VALUES (200, 1, 2, 50.0);
-INSERT INTO transactions VALUES (200, 1000, 1001, 50.0);
+INSERT INTO transactions VALUES (201, 1000, 1001, 50.0);
 ```
 If the first command succeeds and the second fails, then the database enforces the constraint and you should write "Yes" in the table.
 If both commands succeed, then the database does not enforce the constraint and you should write "No" in the table.
