@@ -57,7 +57,7 @@ should list a handful of tables.
 > $ docker-compose exec pg psql
 > ```
 > This `psql` incantation runs inside the container (because of `docker-compose exec pg`), and so the url is not needed.
-> Both of rhese two commands are essentially equivalent.
+> Both of these two commands are essentially equivalent.
 > All of the SQL commands you run from inside `psql` will have the exact same effects no matter how you get inside of `psql`.
 
 ### The Schema
@@ -142,7 +142,7 @@ we should also update the corresponding rows in the `balances` table at the same
 That way, when we want the balance, all we need to do is look at a single row in the `balances` table instead of summing over the entire `transactions` table.
 
 This type of caching is very widely used in realworld databases.
-In postgres, these cached tables are offten colloquiually referred to as [rollup tables](https://www.citusdata.com/blog/2018/06/14/scalable-incremental-data-aggregation/).
+In postgres, these cached tables are often colloquially referred to as [rollup tables](https://www.citusdata.com/blog/2018/06/14/scalable-incremental-data-aggregation/).
 
 > **NOTE:**
 > This is confusing terminology because there is a [ROLLUP sql command](https://www.educba.com/postgresql-rollup/) that is totally unrelated to the idea of a rollup table.
