@@ -6,7 +6,7 @@ if __name__ == '__main__':
     # process command line args
     parser = argparse.ArgumentParser()
     parser.add_argument('db')
-    parser.add_argument('--num_accounts', type=int, default=100)
+    parser.add_argument('--num_accounts', type=int, default=1000)
     args = parser.parse_args()
 
     # generate accounts
