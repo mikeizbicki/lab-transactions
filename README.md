@@ -270,7 +270,7 @@ and so the script passes by default.
 
 Run the command
 ```
-$ python3 scripts/random_transfers.py postgresql://postgres:pass@localhost:9999
+$ python3 scripts/random_transfers.py postgresql://postgres:pass@localhost:<PORT>
 ```
 You should see a large number of SQL commands scroll through your screen.
 This script performs 1000 random transfers between accounts by calling the `Ledger.transfer_funds` method.
