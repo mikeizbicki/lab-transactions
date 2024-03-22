@@ -180,6 +180,10 @@ $ python3
 The library is structured so that every time it runs a SQL command, it logs those commands to the screen for you to see.
 You can see the timestamp that the command run, followed by the process id of the command, followed by the actual command.
 
+> **NOTE:**
+> The `import` command above is likely to give you an error about missing libraries.
+> You will need to use the `pip3 install` command to install these libraries.
+
 Here, we can see that three SQL commands were run by the `create_account` method.
 Open the file `Ledger/__init__.py` and read through the `create_account` method to understand why three SQL statements were run.
 
