@@ -237,7 +237,7 @@ Connect to psql and run the command
 ```
 SELECT count(*) FROM accounts;
 ```
-You should see that 100 accounts have been created.
+You should see that 1000 accounts have been created.
 
 The tasks below will occasionally ask you to reset the database.
 To do so, you'll need to bring it down, then back up, then recreate these accounts.
