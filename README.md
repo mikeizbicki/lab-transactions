@@ -405,7 +405,8 @@ My solution got a result around 1500.
 ## Task 4: More Speed
 
 Finally, our code is correct!
-But unfortunately, it's really slow.
+But unfortunately, it's slow.
+We will now see how to speed it up.
 
 ### The Problem
 
@@ -461,6 +462,18 @@ SELECT count(*) FROM transactions
 to count the total number of transactions inserted with your improved FOR UPDATE code.
 You should get a number significantly larger than you got in the previous task.
 I get around 20000, a bit more than a 10x increase.
+
+## Takeaway
+
+Inserting data into databases correctly is hard.
+There many subtle ways to get code that looks correct,
+but generates incorrect results in the presence of crashes or concurrency.
+Transactions and locks are our only tools to solve these problems.
+But they are hard to use too :(
+
+Writing scripts that test the integrity of your data is one of the few useful tools we have for debugging these types of problems.
+Whenever you have a dataset that is supposed to maintain some sort of invariant,
+you should always write a script that tests that invariant.
 
 ## Submission
 
