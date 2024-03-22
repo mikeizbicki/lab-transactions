@@ -2,11 +2,11 @@
 
 In the [consistency lab](https://github.com/mikeizbicki/lab-consistency), you created a simple database for a double-entry accounting system.
 In this lab, we will extend this database to have a simple python library interface.
-You will see that:
+You will see:
 
-1. Database code that looks "obviously correct" can be horribly flawed.
-2. How to fix these flaws using transactions and locks.
-3. How using the wrong lock can slow down your code.
+1. that database code that looks "obviously correct" can be horribly flawed,
+2. how to fix these flaws using transactions and locks, and
+3. how using the wrong lock can slow down your code.
 
 Because of the difficulty and importance of this topic,
 you should be extra careful in this lab.
