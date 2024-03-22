@@ -80,7 +80,7 @@ class Ledger:
         self.connection.execute(sql)
 
         # update the debit account balance
-        sql = f'SELECT balance FROM balances WHERE account_id = {debit_account_id} FOR UPDATE'
+        sql = f'SELECT balance FROM balances WHERE account_id = {debit_account_id}'
         logging.debug(sql)
         results = self.connection.execute(sql)
         debit_account_balance = results.first()['balance']

@@ -2,11 +2,11 @@
 
 In the [consistency lab](https://github.com/mikeizbicki/lab-consistency), you created a simple database for a double-entry accounting system.
 In this lab, we will extend this database to have a simple python library interface.
-You will see that:
+You will see:
 
-1. Database code that looks "obviously correct" can be horribly flawed.
-2. How to fix these flaws using transactions and locks.
-3. How using the wrong lock can slow down your code.
+1. that database code that looks "obviously correct" can be horribly flawed,
+2. how to fix these flaws using transactions and locks, and
+3. how using the wrong lock can slow down your code.
 
 Because of the difficulty and importance of this topic,
 you should be extra careful in this lab.
@@ -180,6 +180,10 @@ $ python3
 The library is structured so that every time it runs a SQL command, it logs those commands to the screen for you to see.
 You can see the timestamp that the command run, followed by the process id of the command, followed by the actual command.
 
+> **NOTE:**
+> The `import` command above is likely to give you an error about missing libraries.
+> You will need to use the `pip3 install` command to install these libraries.
+
 Here, we can see that three SQL commands were run by the `create_account` method.
 Open the file `Ledger/__init__.py` and read through the `create_account` method to understand why three SQL statements were run.
 
@@ -266,7 +270,7 @@ and so the script passes by default.
 
 Run the command
 ```
-$ python3 scripts/random_transfers.py postgresql://postgres:pass@localhost:9999
+$ python3 scripts/random_transfers.py postgresql://postgres:pass@localhost:<PORT>
 ```
 You should see a large number of SQL commands scroll through your screen.
 This script performs 1000 random transfers between accounts by calling the `Ledger.transfer_funds` method.
