@@ -124,7 +124,7 @@ It turns out that this view requires $O(n)$ time to compute,
 where $n$ is the total number of transactions in our history.
 
 > **ASIDE:**
-> We will see in the comming weeks that this query is implemented using an algorithm called SEQUENTIAL SCAN.
+> We will see in the coming weeks that this query is implemented using an algorithm called SEQUENTIAL SCAN.
 > This algorithm is basically a for loop over the entire `transactions` table,
 > and that's where the $O(n)$ runtime comes from.
 
@@ -237,7 +237,7 @@ Connect to psql and run the command
 ```
 SELECT count(*) FROM accounts;
 ```
-You should see that 100 accounts have been created.
+You should see that 1000 accounts have been created.
 
 The tasks below will occasionally ask you to reset the database.
 To do so, you'll need to bring it down, then back up, then recreate these accounts.
