@@ -89,3 +89,6 @@ class Ledger:
         sql = f'UPDATE balances SET balance={debit_new_balance} WHERE account_id = {debit_account_id}'
         logging.debug(sql)
         self.connection.execute(sql)
+
+        # FIXME:
+        # you need to update the credit account balance as well

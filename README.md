@@ -8,6 +8,8 @@ You will see that:
 2. How to fix these flaws using locks.
 3. The performance implications of locks.
 
+<img src=img/pitfalls1.jpg width=300px>
+
 ## Project Setup
 
 Clone this repo onto the lambda server.
