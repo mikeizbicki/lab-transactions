@@ -247,7 +247,7 @@ To do so, you'll need to bring it down, then back up, then recreate these accoun
 We saw in the last lab that the database is able to automatically enforce certain types of correctness.
 But there are other types of correctness that no database can check automatically.
 
-In our this project, one of the properties of our `balances` table is that
+In this project, one of the properties of our `balances` table is that
 ```
 SELECT sum(balance) FROM balances;
 ```
@@ -270,7 +270,7 @@ and so the script passes by default.
 
 Run the command
 ```
-$ python3 scripts/random_transfers.py postgresql://postgres:pass@localhost:9999
+$ python3 scripts/random_transfers.py postgresql://postgres:pass@localhost:<PORT>
 ```
 You should see a large number of SQL commands scroll through your screen.
 This script performs 1000 random transfers between accounts by calling the `Ledger.transfer_funds` method.
