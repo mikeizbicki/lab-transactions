@@ -391,11 +391,6 @@ This will ensure that only one process is able to write to the table at a time.
 Once you've made the necessary changes,
 verify they work by rerunning the `chaosmonkey_parallel.sh` script and then verifying the integrity check.
 
-> **NOTE:**
-> When you run the `chaosmonkey_parallel.sh` script, you should notice a large number of deadlock errors being reported.
-> You will need to fix these errors by wrapping the function in a try/except block,
-> and repeating the failed `transfer_funds` function call.
-
 ### Performance
 
 To measure the performance of our application, we can measure the total number of transactions that were inserted in the 10 seconds of the chaos monkey script.
@@ -453,8 +448,10 @@ To use the row level lock:
 Once you've made the necessary changes,
 verify they work by rerunning the `chaosmonkey_parallel.sh` script and then verifying the integrity check.
 
-It's still possible to encounter deadlocks with the FOR UPDATE locks,
-but the try/except blocks you previously added should catch these deadlocks still.
+> **NOTE:**
+> When you run the `chaosmonkey_parallel.sh` script, you will likely notice a large number of deadlock errors being reported.
+> You will need to fix these errors by wrapping the function in a try/except block,
+> and repeating the failed `transfer_funds` function call.
 
 ### Verifying Speed Boost
 
