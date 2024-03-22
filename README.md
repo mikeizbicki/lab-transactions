@@ -13,7 +13,7 @@ you should be extra careful in this lab.
 
 <img src=img/pitfalls1.jpg width=300px>
 
-## Project Setup
+## Task 0: Project Setup
 
 Clone this repo onto the lambda server.
 There is no need to fork the repository.
@@ -28,8 +28,8 @@ $ docker-compose up -d
 You should get an error about a bad port number.
 
 In previous projects, this never happened because the database port was never exposed to the lamdba server.
-In this project, however, we will will be running python code on the lambda server (and not the `pg` container) that needs to connect to the database,
-and so we need to expose the port in order to do so.
+In this project, however, the database needs to be exposed to the lambda server.
+That's because we will be running python code on the lambda server (and not the `pg` container) that needs to connect to the database.
 
 Edit the `ports` field of the `docker-compose.yml` file so that your database will be exposed on a unique port that doesn't conflict with other students.
 (Your UID is a reasonable choice, and you can find it by running `id -u` in the shell.)
@@ -51,18 +51,22 @@ should list a handful of tables.
 
 > **NOTE:**
 > The `psql` command above is running directly on the lambda server and not inside the container.
-> Previously, we have been running inside the container using a command like
+> The long url passed into `psql` tells psql how to connect to the database inside the container.
+> Previously, this we were running psql inside the container using a command like
 > ```
 > $ docker-compose exec pg psql
 > ```
-> These two commands are essentially equivalent.
-> All of your SQL commands will have the exact same effects no matter how you get inside of psql.
+> This `psql` incantation runs inside the container (because of `docker-compose exec pg`), and so the url is not needed.
+> Both of rhese two commands are essentially equivalent.
+> All of the SQL commands you run from inside `psql` will have the exact same effects no matter how you get inside of `psql`.
 
 ### The Schema
 
-The most important file in any project working with databases is the `.sql` file containing the schema (i.e. CREATE TABLE commands).
+The most important file in any project working with databases is the `.sql` file containing the schema.
 This project's schema is stored in `services/pg/sql/ledger-pg.sql`.
-Let's take a look at it:
+The `Dockerfile` automatically loads this sql file into the database when the database first starts.
+
+Let's take a look at the contents:
 ```
 $ cat sql/ledger-pg.sql
 CREATE TABLE accounts (
@@ -84,14 +88,15 @@ CREATE TABLE balances (
     balance NUMERIC(10,2)
 );
 ```
-The `accounts` and `transactions` tables are the same as in the previous lab.
-`accounts` just stores the names of all of our accounts,
+This file is very similar to the schema from the consistency lab.
+The `accounts` and `transactions` tables are exactly the same.
+Recall that `accounts` just stores the names of all of our accounts,
 and `transactions` stores every transfer of money between two accounts.
 
 The `balances` table is new.
-Why do we have it?
 
-Recall that in the last lab we created a VIEW called `balances` that computed the total balance in each account.
+Recall that in the last lab instead of having a `balances` table, we created a `balances` view.
+The view computed the total balance in each account by summing over the `transactions` table.
 It looked like
 ```
 CREATE VIEW balances AS
@@ -125,30 +130,31 @@ where $n$ is the total number of transactions in our history.
 
 For the small databases we used in the last lab,
 that wasn't a problem.
-But in the real world, this would be a major problem.
+But in the real world, this would be a problem.
 Real accounting systems can have trillions of transactions stored in them,
 and so an $O(n)$ operation would be very slow.
 We need something that will take $O(1)$ time.
 
-The `balances` table will let us achieve this faster lookup.
-The basic idea is that whenever we insert a new transaction,
+The `balances` table will let us achieve this faster lookup through *caching*.
+The basic idea is that we should pre-compute the balances as we insert the transactions.
+That is, whenever we insert a new transaction,
 we should also update the corresponding rows in the `balances` table at the same time.
-That way, when we want the balance, all we need is a simple SELECT statement.
+That way, when we want the balance, all we need to do is look at a single row in the `balances` table instead of summing over the entire `transactions` table.
 
-The general technique of precomputing expensive computations is called [caching](https://en.wikipedia.org/wiki/Cache_(computing)),
-and it is very widely used in practice.
+This type of caching is very widely used in realworld databases.
+In postgres, these cached tables are offten colloquiually referred to as [rollup tables](https://www.citusdata.com/blog/2018/06/14/scalable-incremental-data-aggregation/).
+
+> **NOTE:**
+> This is confusing terminology because there is a [ROLLUP sql command](https://www.educba.com/postgresql-rollup/) that is totally unrelated to the idea of a rollup table.
+> The naming of a rollup table was invented by a group of postgres developers at a data analytics company called citus.
+> Citus is famous company in the postgres world for their efficient large scale postgres products and tutorials,
+> and so their idiosyncratic naming has become standard.
+> [Citus was acquired by Microsoft in 2019](https://blogs.microsoft.com/blog/2019/01/24/microsoft-acquires-citus-data-re-affirming-its-commitment-to-open-source-and-accelerating-azure-postgresql-performance-and-scale/) and their tools now are the backend for many big data projects at Microsoft.
 
 ### Adding Accounts (I)
 
 The file `Ledger/__init.py__` contains our library's python code.
 In this section, we'll see how to use this library to manipulate the database.
-
-<!--
-Open this file in `vim`.
-Read the docstrings for the `Ledger` class and the `create_account` and `transfer_funds` methods.
-Ensure that you understand how these methods are supposed to work.
-Let's see how to use the python code to add accounts to the database.
--->
 
 First, we'll verify there are no accounts in the database.
 Run the following commands
@@ -172,7 +178,10 @@ $ python3
 2024-03-22 00:09:04.568 - 55670 - INSERT INTO balances VALUES (:account_id, 0);
 ```
 The library is structured so that every time it runs a SQL command, it logs those commands to the screen for you to see.
+You can see the timestamp that the command run, followed by the process id of the command, followed by the actual command.
+
 Here, we can see that three SQL commands were run by the `create_account` method.
+Open the file `Ledger/__init__.py` and read through the `create_account` method to understand why three SQL statements were run.
 
 Now reconnect to psql and verify that an account has been created.
 ```
@@ -183,7 +192,13 @@ postgres=# select * from accounts;
           1 | test
 (1 row)
 ```
-Now reset the database by bringing it down and back up.
+### Adding Accounts (II)
+
+We're going to be creating some test cases soon.
+To do that, we'll need an automated way of populating the database with accounts.
+The file `scripts/create_accounts.py` calls the `create_account` method in a for loop to do this for us.
+
+First, reset the database by bringing it down and back up.
 ```
 $ docker-compose down
 $ docker-compose up -d
@@ -193,14 +208,7 @@ postgres=# select * from accounts;
 ------------+------
 (0 rows)
 ```
-
-### Adding Accounts (II)
-
-We're going to be creating some test cases soon.
-To do that, we'll need an automated way of populating the database with accounts.
-The file `scripts/create_accounts.py` calls the `create_account` method in a for loop to do this for us.
-
-Run the command
+Now run the command
 ```
 $ python3 scripts/create_accounts.py postgresql://postgres:pass@localhost:<PORT> 
 ```
@@ -234,22 +242,25 @@ To do so, you'll need to bring it down, then back up, then recreate these accoun
 
 We saw in the last lab that the database is able to automatically enforce certain types of correctness.
 But there are other types of correctness that no database can check automatically.
-In this database, one of the properties of our `balances` table is that
+
+In our this project, one of the properties of our `balances` table is that
 ```
 SELECT sum(balance) FROM balances;
 ```
 should always be 0.
-(Make sure you understand why before continuing.)
+Make sure you understand why before continuing.
 
 It is common practice to document these *invariants* that a database should maintain by writing scripts that verify the invariant.
-The script `scripts/integrity_check.sh` verifies the above condition.
+The script `scripts/integrity_check.sh` verifies that the above invariant is maintained.
 Run it.
 ```
 $ sh scripts/integrity_check.sh
 sum(balance) = 0.00
 PASS
 ```
-At this point, we haven't made any transactions, and so the script passes by default.
+At this point, we haven't made any transactions.
+All the balances are initialized to 0,
+and so the script passes by default.
 
 ### The Problem
 
@@ -258,22 +269,25 @@ Run the command
 $ python3 scripts/random_transfers.py postgresql://postgres:pass@localhost:9999
 ```
 You should see a large number of SQL commands scroll through your screen.
-The script performs 1000 random transfers between accounts by calling the `Ledger.transfer_funds` method.
+This script performs 1000 random transfers between accounts by calling the `Ledger.transfer_funds` method.
 (I recommend you read through the source and understand it before continuing.)
 
 Unfortunately, the `Ledger.transfer_funds` method is currently incorrect.
-Run the integrity check.
+Rerun the integrity check.
 ```
 $ sh scripts/integrity_check.sh
 ```
 You should see that the sum of the balances is non-zero,
 and that the check fails.
+The `random_transfers.py` script is nondeterministic,
+so everyone will have different sums,
+but they should all be non-zero.
 
 ### The Solution
 
 Modify the `transfer_funds` method so that it is correct.
 
-Run the following commands to bring the database into a sane state and test your solution
+To test your solution, run the following commands to reset the database and then rerun the test scripts.
 ```
 $ docker-compose down
 $ docker-compose up -d
@@ -307,9 +321,6 @@ The database will now likely once again fail the integrity check.
 ```
 $ sh scripts/integrity_check.sh
 ```
-You should see that the sum of the balances is non-zero,
-and that the check fails.
-
 This is because your `transfer_funds` method is not atomic.
 If the python process is killed while it is the middle of this function,
 then only some of the UPDATE/INSERT commands will take effect and not others.
@@ -317,19 +328,20 @@ then only some of the UPDATE/INSERT commands will take effect and not others.
 ### The Solution
 
 To make your code atomic, you need to wrap it in a transaction.
+
 Using the SQLAlchemy library, we don't directly call the `BEGIN` and `COMMIT` SQL commands.
 Instead, we use the `connection.begin()` method to create a transaction.
 This is commonly done inside of a `with` block so that the transaction is automatically committed when the block closes.
-That is, the code looks something like
+The code will look something like
 ```
 with self.connection.begin():
     # insert SQL commands here
 ```
+The provided `create_account` method is atomic,
+and you can reference this function as an example.
 
-Your next task is to make the `transfer_funds` method atomic by putting it inside a transaction.
-The provided `create_account` method is atomic, and you can reference this function as an example.
-
-Run the following commands to bring the database into a sane state and test your solution.
+Once you've fixed the `transfer_funds` method,
+rerun the test script to verify that the integrity check is now maintained.
 ```
 $ docker-compose down
 $ docker-compose up -d
@@ -337,7 +349,8 @@ $ python3 scripts/create_accounts.py postgresql://postgres:pass@localhost:<PORT>
 $ sh scripts/chaosmonkey_sequential.sh postgresql://postgres:pass@localhost:<PORT> 
 $ sh scripts/integrity_check.sh
 ```
-You won't be able to complete the next task until these checks pass.
+
+Like before, you won't be able to complete the next task until these checks pass.
 
 ## Task 3: Correctness (With Concurrency)
 
@@ -363,6 +376,8 @@ $ sh scripts/integrity_check.sh
 This is because multiple transactions are all editing the `balances` table at the same time.
 You should ensure that you understand how the SELECT and UPDATE commands can be interwoven to cause data loss before moving on.
 
+<!-- FIXME: better explanation -->
+
 ### The Solution
 
 At the top of your `transfer_funds` method,
@@ -377,39 +392,64 @@ verify they work by rerunning the `chaosmonkey_parallel.sh` script and then veri
 > You will need to fix these errors by wrapping the function in a try/except block,
 > and repeating the failed `transfer_funds` function call.
 
-## Task 4: Speed
+### Performance
+
+To measure the performance of our application, we can measure the total number of transactions that were inserted in the 10 seconds of the chaos monkey script.
+Run the SQL command
+```
+SELECT count(*) FROM transactions
+```
+Make a note of the result so you can compare it to the result in the next section.
+My solution got a result around 1500.
+
+## Task 4: More Speed
 
 Finally, our code is correct!
 But unfortunately, it's really slow.
-The ACCESS EXCLUSIVE lock ensures that only one process can access the `balances` table at a time,
-and this defeats the whole point of parallelism!
 
-Imagine if a credit card company like Visa or Mastercard implemented their accounts ledger this way with an ACCESS EXCLUSIVE lock.
+### The Problem
+
+The ACCESS EXCLUSIVE lock ensures that only one process can access the `balances` table at a time.
+This causes two types of problems.
+
+The first is related to "realtime" systems,
+where the database is being updated in realtime by real users.
+As an example, imagine if a credit card company like Visa or Mastercard implemented their accounts ledger this way with an ACCESS EXCLUSIVE lock.
 Then only one person in the world would be able to use a credit card at a time.
-That's obviously not a good situation to be in.
-We need to find a better lock mode.
+That's obviously not good from a business perspective.
+
+The second problem is related to data warehousing.
+Imagine we have a large dataset (like the Twitter dataset) that we want to load into a database.
+We would like to do this in parallel with many processes to speed up the insertion.
+But if we use ACCESS EXCLUSIVE locks to guarantee correctness,
+then only one process can run at a time,
+and we can't get any parallel speedup.
 
 ### The Solution
 
-Currently what we're using is a table-level lock.
-But this is too restrictive for our purposes.
+The ACCESS EXCLUSIVE lock is a table-level lock and is too restrictive for our purposes.
 A row-level lock would ensure that two transactions don't overwrite the balance of a single user,
 while still allowing two transactions to write to two different users.
 
 The SELECT/UPDATE pattern in the `transfer_funds` method is an extremely common pattern in database applications.
 (And, as we've seen, an extremely common source of very subtle bugs!)
-Postgres has implemented the FOR UPDATE clause to select statements that acquire the exact level of locking we need.
+Postgres has a special SELECT FOR UPDATE syntax that simplifies this pattern.
 
-Comment out the LOCK statement that you added in the previous task,
-and modify the SELECT statements to use the FOR UPDATE clause.
-The FOR UPDATE clause is added to the end of SELECT statements,
-so the overall commands will have the form
-```
-SELECT columns FROM table WHERE condition FOR UPDATE
-```
+To use the row level lock:
+1. Comment out the LOCK statement that you added in the previous task.
+2. Modify the SELECT statements to use the FOR UPDATE clause.
+
+    The FOR UPDATE clause is added to the end of SELECT statements,
+    so the overall commands will have the form
+    ```
+    SELECT columns FROM table WHERE condition FOR UPDATE
+    ```
 
 Once you've made the necessary changes,
 verify they work by rerunning the `chaosmonkey_parallel.sh` script and then verifying the integrity check.
+
+It's still possible to encounter deadlocks with the FOR UPDATE locks,
+but the try/except blocks you previously added should catch these deadlocks still.
 
 ### Verifying Speed Boost
 
@@ -419,20 +459,9 @@ Run the SQL command
 SELECT count(*) FROM transactions
 ```
 to count the total number of transactions inserted with your improved FOR UPDATE code.
-I get around 20000.
-
-Now uncomment the LOCK command in the `transfer_funds` method.
-Bring the database down, and back up, create the test accounts, and rerun the `chaosmonkey_parallel.sh` script.
-Now run the SQL command
-```
-SELECT count(*) FROM transactions
-```
-and you should see that the LOCK version of the code inserts many fewer transactions than the FOR UPDATE version.
-My solution only inserted about 2000 rows.
-
-Because the LOCK version of the code is slower, comment the LOCK back out.
+You should get a number significantly larger than you got in the previous task.
+I get around 20000, a bit more than a 10x increase.
 
 ## Submission
 
-Upload your completed `__init__.py` file to sakai.
-
+Upload your modified `__init__.py` file to sakai.
