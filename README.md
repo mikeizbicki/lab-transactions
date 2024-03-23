@@ -247,7 +247,7 @@ To do so, you'll need to bring it down, then back up, then recreate these accoun
 We saw in the last lab that the database is able to automatically enforce certain types of correctness.
 But there are other types of correctness that no database can check automatically.
 
-In our this project, one of the properties of our `balances` table is that
+In this project, one of the properties of our `balances` table is that
 ```
 SELECT sum(balance) FROM balances;
 ```
