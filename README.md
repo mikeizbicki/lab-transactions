@@ -142,7 +142,7 @@ we should also update the corresponding rows in the `balances` table at the same
 That way, when we want the balance, all we need to do is look at a single row in the `balances` table instead of summing over the entire `transactions` table.
 
 This type of caching is very widely used in realworld databases.
-In postgres, these cached tables are offten colloquiually referred to as [rollup tables](https://www.citusdata.com/blog/2018/06/14/scalable-incremental-data-aggregation/).
+In postgres, these cached tables are often colloquiually referred to as [rollup tables](https://www.citusdata.com/blog/2018/06/14/scalable-incremental-data-aggregation/).
 
 > **NOTE:**
 > This is confusing terminology because there is a [ROLLUP sql command](https://www.educba.com/postgresql-rollup/) that is totally unrelated to the idea of a rollup table.
