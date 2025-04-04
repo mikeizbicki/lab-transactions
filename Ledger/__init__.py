@@ -78,6 +78,7 @@ class Ledger:
         sql = text(f'INSERT INTO transactions (debit_account_id, credit_account_id, amount) VALUES ({debit_account_id}, {credit_account_id}, {amount});')
         logging.debug(sql)
         self.connection.execute(sql)
+        self.connection.commit()
 
         # update the debit account balance
         sql = text(f'SELECT balance FROM balances WHERE account_id = {debit_account_id};')
