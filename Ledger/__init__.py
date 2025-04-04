@@ -71,7 +71,20 @@ class Ledger:
         '''
         This function adds a row to the "transactions" table with the specified input values.
         It also updates the "balances" table to apply the debits and credits to the appropriate accounts.
-        Notice that in order to do an UPDATE command to apply the credits/debits, we first need to run a SELECT command to get the current balance.
+
+        Notice two differences between this function and the code in `create_account`:
+        1. This function does not use the connection.begin() function to start a transaction.
+            When commands are not inside of a transaction block like this,
+            then SQLAlchemy uses implicit transactions by default.
+            This means that whenever a connection.execute command is called,
+            SQLAlchemy will also call the BEGIN command internally.
+            In order for a database modifying command (e.g. INSERT or UPDATE) to actually commit the value,
+            you must call the self.connection.commit() command explicitly.
+            It is also possible to enable "autocommit" to automatically commit these changes for you.
+            The documentation contains detailed explanations: <https://docs.sqlalchemy.org/en/20/tutorial/dbapi_transactions.html>.
+
+        2. This code uses f-strings instead of bind parameters.
+            This can result in SQL injection vulnerabilities.
         '''
 
         # insert the transaction

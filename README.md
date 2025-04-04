@@ -262,6 +262,10 @@ $ sh scripts/integrity_check.sh
 sum(balance) = 0.00
 PASS
 ```
+> **NOTE:**
+> If your command has no output,
+> then look for an error in the way docker compose is being called.
+
 At this point, we haven't made any transactions.
 All the balances are initialized to 0,
 and so the script passes by default.
@@ -452,6 +456,17 @@ verify they work by rerunning the `chaosmonkey_parallel.sh` script and then veri
 > When you run the `chaosmonkey_parallel.sh` script, you will likely notice a large number of deadlock errors being reported.
 > You will need to fix these errors by wrapping the function in a try/except block,
 > and repeating the failed `transfer_funds` function call.
+>
+> These error messages can be hard to find because they are hiding in the sea of debug messages that you have been printing.
+> You can disable the debug messages by modifying the line
+> ```
+    level=logging.DEBUG,
+> ```
+>  to
+> ```
+>   level=logging.WARNING,
+> ```
+> inside the configuration of the `logging` module at the top of the script.
 
 ### Verifying Speed Boost
 
@@ -462,7 +477,6 @@ SELECT count(*) FROM transactions
 ```
 to count the total number of transactions inserted with your improved FOR UPDATE code.
 You should get a number significantly larger than you got in the previous task.
-I get around 20000, a bit more than a 10x increase.
 
 ## Takeaway
 
