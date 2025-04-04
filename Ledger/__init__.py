@@ -54,7 +54,7 @@ class Ledger:
             sql = sql.bindparams(name=name)
             logging.debug(sql)
             results = self.connection.execute(sql)
-            account_id = results.first()['account_id']
+            account_id = results.first()[0]
 
             # add the row into the "balances" table
             sql = text('INSERT INTO balances VALUES (:account_id, 0);')
@@ -83,7 +83,7 @@ class Ledger:
         sql = f'SELECT balance FROM balances WHERE account_id = {debit_account_id}'
         logging.debug(sql)
         results = self.connection.execute(sql)
-        debit_account_balance = results.first()['balance']
+        debit_account_balance = results.first()[0]
 
         debit_new_balance = debit_account_balance - amount
         sql = f'UPDATE balances SET balance={debit_new_balance} WHERE account_id = {debit_account_id}'
