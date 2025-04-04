@@ -75,20 +75,21 @@ class Ledger:
         '''
 
         # insert the transaction
-        sql = text(f'INSERT INTO transactions (debit_account_id, credit_account_id, amount) VALUES ({debit_account_id}, {credit_account_id}, {amount})')
+        sql = text(f'INSERT INTO transactions (debit_account_id, credit_account_id, amount) VALUES ({debit_account_id}, {credit_account_id}, {amount});')
         logging.debug(sql)
         self.connection.execute(sql)
 
         # update the debit account balance
-        sql = text(f'SELECT balance FROM balances WHERE account_id = {debit_account_id}')
+        sql = text(f'SELECT balance FROM balances WHERE account_id = {debit_account_id};')
         logging.debug(sql)
         results = self.connection.execute(sql)
         debit_account_balance = results.first()[0]
 
         debit_new_balance = debit_account_balance - amount
-        sql = text(f'UPDATE balances SET balance={debit_new_balance} WHERE account_id = {debit_account_id}')
+        sql = text(f'UPDATE balances SET balance={debit_new_balance} WHERE account_id = {debit_account_id};')
         logging.debug(sql)
         self.connection.execute(sql)
+        self.connection.commit()
 
         # FIXME:
         # you need to update the credit account balance as well
