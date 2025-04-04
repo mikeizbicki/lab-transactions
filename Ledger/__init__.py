@@ -31,7 +31,7 @@ class Ledger:
         sql = text('SELECT account_id FROM accounts;')
         logging.debug(sql)
         results = self.connection.execute(sql)
-        return [row['account_id'] for row in results.all()]
+        return [row[0] for row in results.all()]
 
     def create_account(self, name):
         '''
