@@ -68,7 +68,7 @@ The `Dockerfile` automatically loads this sql file into the database when the da
 
 Let's take a look at the contents:
 ```
-$ cat sql/ledger-pg.sql
+$ cat services/pg/sql/ledger-pg.sql
 CREATE TABLE accounts (
     account_id SERIAL PRIMARY KEY,
     name TEXT NOT NULL
@@ -321,7 +321,7 @@ Run the command
 ```
 $ sh scripts/chaosmonkey_sequential.sh postgresql://postgres:pass@localhost:<PORT> 
 ```
-This file runs the `scripts/random_transactions.py` file in a loop,
+This file runs the `scripts/random_transfers.py` file in a loop,
 but kills each process after only 1 second.
 (I recommend you read through the source and understand it before continuing.)
 
