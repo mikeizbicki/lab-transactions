@@ -52,7 +52,7 @@ should list a handful of tables.
 > **NOTE:**
 > The `psql` command above is running directly on the lambda server and not inside the container.
 > The long url passed into `psql` tells psql how to connect to the database inside the container.
-> Previously, this we were running psql inside the container using a command like
+> Previously, we were running psql inside the container using a command like
 > ```
 > $ docker-compose exec pg psql
 > ```
@@ -492,4 +492,4 @@ you should always write a script that tests that invariant.
 
 ## Submission
 
-Upload your modified `__init__.py` file to sakai.
+Upload your modified `__init__.py` file to canvas.
