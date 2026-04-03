@@ -453,30 +453,42 @@ Once you've made the necessary changes,
 verify they work by rerunning the `chaosmonkey_parallel.sh` script and then verifying the integrity check.
 
 > **NOTE:**
-> When you run the `chaosmonkey_parallel.sh` script, you will likely notice a large number of deadlock errors being reported.
+> When you run the `chaosmonkey_parallel.sh` script, you should see a large number of deadlock errors being reported.
 > You will need to fix these errors by wrapping the function in a try/except block,
 > and repeating the failed `transfer_funds` function call.
 >
 > These error messages can be hard to find because they are hiding in the sea of debug messages that you have been printing.
 > You can disable the debug messages by modifying the line
 > ```
-    level=logging.DEBUG,
+>   level=logging.DEBUG,
 > ```
 >  to
 > ```
 >   level=logging.WARNING,
 > ```
 > inside the configuration of the `logging` module at the top of the script.
+> After making this change, you will see the deadlock errors being printed to the screen because they will not be drowned in a sea of debug statements.
+>
+> Recall that when a deadlock occurs, sqlalchemy will raise an exception.
+> If you do not catch this exception, then python will terminate early and unexpectedly.
+> This will cause your script to not insert any more data points.
+> You will pass the integrity check above, but you will still have the wrong contents in the database!
+> This is like Visa just denying your credit card transaction because of a deadlock... that's better than corrupting their internal database, but still not good from a business perspective.
 
 ### Verifying Speed Boost
 
 Now let's verify that we are in fact inserting more transactions with the FOR UPDATE version of the code.
 Run the SQL command
 ```
-SELECT count(*) FROM transactions
+SELECT count(*) FROM transactions;
 ```
 to count the total number of transactions inserted with your improved FOR UPDATE code.
+
 You should get a number significantly larger than you got in the previous task.
+The `chaosmonkey_parallel.sh` script runs 100 processes in parallel, so you should theoretically see a 100x increase in the number of rows inserted.
+Due to overhead issues, you might see only an 80-90x increase.
+If your increase is smaller than that,
+then you probably did not solve the deadlock issue correctly.
 
 ## Takeaway
 
