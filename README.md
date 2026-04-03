@@ -493,12 +493,12 @@ then you probably did not solve the deadlock issue correctly.
 ## Takeaway
 
 Inserting data into databases correctly is hard.
-There many subtle ways to get code that looks correct,
+There are many subtle ways to get code that looks correct,
 but generates incorrect results in the presence of crashes or concurrency.
 Transactions and locks are our only tools to solve these problems.
 But they are hard to use too :(
 
-Writing scripts that test the integrity of your data is one of the few useful tools we have for debugging these types of problems.
+Writing scripts that test the integrity of your data is one of the few useful methods we have for debugging these types of problems.
 Whenever you have a dataset that is supposed to maintain some sort of invariant,
 you should always write a script that tests that invariant.
 
